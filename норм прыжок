@@ -1,0 +1,53 @@
+import pygame
+ 
+pygame.init()
+ 
+d_weight = 800
+d_height = 600
+display = pygame.display.set_mode((d_weight, d_height))
+ 
+character_width = 60
+character_height = 100
+character_x = d_weight // 3
+character_y = d_height - character_height - 100
+ 
+clock = pygame.time.Clock()
+do_jump = False
+jumping_counter = 30
+ 
+ 
+def jump():
+    global character_y, do_jump, jumping_counter
+    if jumping_counter >= -30:
+        character_y -= jumping_counter / 2.5
+        jumping_counter -= 1
+    else:
+        jumping_counter = 30
+        do_jump = False
+ 
+ 
+def game_constructor():
+    game = True
+ 
+    while game:
+        global do_jump
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+ 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            do_jump = True
+ 
+        if do_jump:
+            jump()
+ 
+        display.fill((255, 255, 255))
+        pygame.draw.rect(display, (49, 52, 78), (character_x, character_y, character_width, character_height))
+        pygame.display.update()
+ 
+        clock.tick(60)
+ 
+ 
+game_constructor()
