@@ -1,0 +1,119 @@
+import pygame
+import random
+import time
+
+# Инициализация pygame
+pygame.init()
+
+# Получение разрешения экрана
+screen_info = pygame.display.Info()
+d_width = screen_info.current_w
+d_height = screen_info.current_h
+
+# Настройка отображения в полноэкранном режиме
+display = pygame.display.set_mode((d_width, d_height), pygame.FULLSCREEN)
+
+# Загрузка фонового изображения
+background = pygame.image.load("background.jpg")
+background = pygame.transform.scale(background, (d_width, d_height))
+
+class Character:
+    def __init__(self, width, height, x, y):
+        self.width = width
+        self.height = height
+        self.x = x
+        self.y = y
+        self.jumping = False
+        self.jump_count = 10
+        self.image = pygame.image.load("character.png")
+        self.image = pygame.transform.scale(self.image, (width, height))
+
+    def move_left(self):
+        self.x -= 5
+
+    def move_right(self):
+        self.x += 5
+
+    def jump(self):
+        if not self.jumping:
+            self.jumping = True
+
+    def update(self):
+        if self.jumping:
+            if self.jump_count >= -10:
+                neg = 1
+                if self.jump_count < 0:
+                    neg = -1
+                self.y -= (self.jump_count ** 2) * 0.5 * neg
+                self.jump_count -= 1
+            else:
+                self.jump_count = 10
+                self.jumping = False
+
+class Platform:
+    def __init__(self, x, y, width, height):
+        self.rect = pygame.Rect(x, y, width, height)
+
+# Создание экземпляров платформ
+platforms = [Platform(random.randint(0, d_width - 200), d_height - 20, 200, 10) for _ in range(5)]
+
+def spawn_new_platform():
+    x = random.randint(0, d_width - 200)
+    platform = Platform(x, -10, 200, 10)
+    platforms.append(platform)
+
+def remove_offscreen_platforms():
+    platforms[:] = [platform for platform in platforms if platform.rect.y < d_height]
+
+def game_constructor():
+    game = True
+    character = Character(90, 100, d_width // 3, d_height - 100)
+
+    clock = pygame.time.Clock()
+    spawn_delay = 2.0
+    last_spawn_time = time.time()
+
+    while game:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_SPACE]:
+            character.jump()
+
+        if keys[pygame.K_LEFT]:
+            character.move_left()
+        if keys[pygame.K_RIGHT]:
+            character.move_right()
+
+        display.blit(background, (0, 0))
+
+        for platform in platforms:
+            pygame.draw.rect(display, (0, 255, 0), platform.rect)
+
+        for platform in platforms:
+            if character.y + character.height >= platform.rect.top and character.y <= platform.rect.bottom and character.x + character.width > platform.rect.left and character.x < platform.rect.right:
+                character.y = platform.rect.top - character.height
+                character.jump_count = 0
+                character.jumping = False
+
+        character.update()
+
+        display.blit(character.image, (character.x, character.y))
+        pygame.display.update()
+        clock.tick(60)
+
+        for platform in platforms:
+            platform.rect.y += 5
+
+        remove_offscreen_platforms()
+
+        current_time = time.time()
+        if current_time - last_spawn_time >= spawn_delay:
+            spawn_new_platform()
+            last_spawn_time = current_time
+
+game_constructor()
