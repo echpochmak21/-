@@ -1,0 +1,86 @@
+import sys
+import pygame
+import random
+
+# Инициализация Pygame
+pygame.init()
+
+# Определение цветов
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Определение размеров экрана
+WIDTH, HEIGHT = 800, 600
+
+# Создание экрана
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Поверни трубы")
+
+# Загрузка изображения трубы
+pipe_image = pygame.image.load("pipe.png")  # Замените "pipe.png" на путь к вашему изображению трубы
+
+# Уменьшение размера труб
+pipe_image = pygame.transform.scale(pipe_image, (100, 40))
+
+# Создание труб
+class Pipe:
+    def __init__(self, x, y):
+        self.rect = pipe_image.get_rect()
+        self.rect.topleft = (x, y)
+        self.angle = 0
+
+    def rotate(self):
+        self.angle = (self.angle + 90) % 360
+
+# Создание угловой трубы
+class CornerPipe(Pipe):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.angle = 0
+        self.image = pygame.image.load("corner_pipe.png")  # Замените "corner_pipe.png" на путь к вашему изображению угловой трубы
+        self.image = pygame.transform.scale(self.image, (100, 100))
+
+# Задайте свои собственные координаты для труб
+pipes = [
+    Pipe(1, 10),
+    Pipe(130, 140),
+    Pipe(500, 300),
+    Pipe(700, 400),
+    Pipe(200, 400)
+]
+
+corner_pipe = CornerPipe(100, 40)
+
+pipes.append(corner_pipe)
+
+# Основной цикл игры
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:  # Левая кнопка мыши
+                # Поворот трубы при клике мыши
+                for pipe in pipes:
+                    if pipe.rect.collidepoint(event.pos):
+                        pipe.rotate()
+
+    # Очистка экрана
+    screen.fill(WHITE)
+
+    # Отрисовка труб на экране
+    for pipe in pipes:
+        if isinstance(pipe, CornerPipe):
+            rotated_pipe = pygame.transform.rotate(pipe.image, pipe.angle)
+        else:
+            rotated_pipe = pygame.transform.rotate(pipe_image, pipe.angle)
+        rotated_rect = rotated_pipe.get_rect(center=pipe.rect.center)
+        screen.blit(rotated_pipe, rotated_rect.topleft)
+
+    # Обновление экрана
+    pygame.display.flip()
+
+# Завершение работы Pygame
+pygame.quit()
+sys.exit()
