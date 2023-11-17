@@ -1,0 +1,123 @@
+import sys
+import pygame
+
+# Инициализация Pygame
+pygame.init()
+
+# Определение цветов
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Определение размеров экрана
+WIDTH, HEIGHT = 800, 650
+
+# Создание экрана
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Сантехник")
+
+# Загрузка изображения трубы
+pipe_image = pygame.image.load("pipe.png")
+pipe_image = pygame.transform.scale(pipe_image, (100, 40))
+
+# Загрузка изображения фона
+background_image = pygame.image.load("background.jpg")
+background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+
+# Создание труб
+class Pipe:
+    def __init__(self, x, y):
+        self.rect = pipe_image.get_rect()
+        self.rect.topleft = (x, y)
+        self.angle = 0
+
+    def rotate(self):
+        self.angle = (self.angle + 90) % 360
+
+# Создание угловой трубы
+class CornerPipe(Pipe):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = pygame.image.load("corner_pipe.png")
+        self.image = pygame.transform.scale(self.image, (100, 100))
+
+# Создание новой трубы
+class NewPipe(Pipe):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.image = pygame.image.load("ygol_truba.png")
+        self.image = pygame.transform.scale(self.image, (100, 90))
+
+# Функция для отрисовки текста на экране
+def draw_text(text, font, color, surface, x, y):
+    text_obj = font.render(text, True, color)
+    text_rect = text_obj.get_rect()
+    text_rect.topleft = (x, y)
+    surface.blit(text_obj, text_rect)
+
+# Загрузка изображения кнопки Play
+play_button_image = pygame.image.load("play.png")
+play_button_image = pygame.transform.scale(play_button_image, (100, 90))
+play_button_rect = play_button_image.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+# Задайте свои собственные координаты для труб
+pipes = [
+    Pipe(1, 10),
+    Pipe(130, 140),
+    Pipe(130, 240),
+    Pipe(5, 480),
+    Pipe(230, 355),
+    Pipe(350, 355),
+]
+
+corner_pipe = CornerPipe(100, 40)
+pipes.append(corner_pipe)
+
+corner_pipe2 = CornerPipe(34, 385)
+pipes.append(corner_pipe2)
+
+corner_pipe2 = CornerPipe(34, 580)
+pipes.append(corner_pipe2)
+
+# Добавление новой трубы
+new_pipe = NewPipe(132, 330)
+pipes.append(new_pipe)
+
+# Основной цикл игры
+running = True
+game_state = "not_started"  # "not_started", "playing", or "game_over"
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if game_state == "not_started" and play_button_rect.collidepoint(event.pos):
+                game_state = "playing"  # Начало игры
+            elif game_state == "playing" and event.button == 1:  # Левая кнопка мыши
+                # Поворот трубы при клике мыши
+                for pipe in pipes:
+                    if pipe.rect.collidepoint(event.pos):
+                        pipe.rotate()
+
+    # Отрисовка заднего фона
+    screen.blit(background_image, (0, 0))
+
+    # Отрисовка труб на экране
+    for pipe in pipes:
+        if isinstance(pipe, CornerPipe) or isinstance(pipe, NewPipe):
+            rotated_pipe = pygame.transform.rotate(pipe.image, pipe.angle)
+        else:
+            rotated_pipe = pygame.transform.rotate(pipe_image, pipe.angle)
+        rotated_rect = rotated_pipe.get_rect(center=pipe.rect.center)
+        screen.blit(rotated_pipe, rotated_rect.topleft)
+
+    # Отображение кнопки Play, если игра не начата
+    if game_state == "not_started":
+        screen.blit(play_button_image, play_button_rect.topleft)
+
+    # Обновление экрана
+    pygame.display.flip()
+
+# Завершение работы Pygame
+pygame.quit()
+sys.exit()
