@@ -1,134 +1,61 @@
-import pygame
-import sys
+# Импорты
+import time
 
-# Инициализация Pygame
-pygame.init()
+import pygame as p
+import random
+from pygame.locals import *
 
-# Размер окна
-screen_width = 800
-screen_height = 600
-
-# Создание окна
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("Мой 2D Платформер")
-
-# Загрузка изображения фона
-background = pygame.image.load("background.jpg")
-background = pygame.transform.scale(background, (screen_width, screen_height))
-
-# Загрузка изображения игрока
-player_image = pygame.image.load("player.png")
-player_width = 50
-player_height = 50
-player_image = pygame.transform.scale(player_image, (player_width, player_height))
-
-# Загрузка изображения платформы
-platform_image = pygame.image.load("platform.png")
-platform_width = 200
-platform_height = 20
-platform_image = pygame.transform.scale(platform_image, (platform_width, platform_height))
-
-# Позиция игрока
-player_x = 100
-player_y = 450
-
-# Позиции платформ
-platform_x = [300, 500, 200, 600, 200, 400, 700, 200, 100, 500, 300]
-platform_y = [500, 450, 550, 400, 300, 350, 300, 250, 150, 200, 50]
-
-# Уменьшенная скорость игрока
-player_speed = 0.3
-
-# Переменные для управления прыжком
-is_jumping = False
-jump_count = 10
-initial_jump_count = jump_count
-
-# Гравитация
-gravity = 0.5
-falling = False
-
-# Основной игровой цикл
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-    # Обработка управления
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        player_x -= player_speed
-    if keys[pygame.K_RIGHT]:
-        player_x += player_speed
-
-    # Обработка прыжка
-    if not is_jumping and not falling:
-        if keys[pygame.K_SPACE]:
-            is_jumping = True
-    if is_jumping:
-        player_y -= (jump_count ** 2) * 0.3
-        jump_count -= 1
-        if jump_count < 0:
-            is_jumping = False
-            falling = True
-            jump_count = initial_jump_count
-    else:
-        # Гравитация
-        if player_y < screen_height - player_height:
-            player_y += gravity
-        else:
-            falling = False
-            player_y = screen_height - player_height
-
-    # Очистка экрана
-    screen.blit(background, (0, 0))  # Фон
-
-    # Отрисовка платформ
-    for i in range(len(platform_x)):
-        screen.blit(platform_image, (platform_x[i], platform_y[i]))
-
-    # Проверка столкновения игрока с платформами
-    for i in range(len(platform_x)):
-        if (
-            player_x + player_width > platform_x[i]
-            and player_x < platform_x[i] + platform_width
-            and player_y + player_height > platform_y[i]
-            and player_y < platform_y[i] + platform_height
-        ):
-            # Если игрок касается платформы сверху, остановить падение
-            if player_y + player_height <= platform_y[i] + 10:
-                falling = False
-                player_y = platform_y[i] - player_height
-                break
-
-    # Отрисовка игрока
-    screen.blit(player_image, (player_x, player_y))
-
-    pygame.display.flip()  # Обновление экрана
-
-# Завершение Pygame
-pygame.quit()
-sys.exit()
+# Константы цветов RGB
+BLACK = (0 , 0 , 0)
+WHITE = (255 , 255 , 255)
+# Создаем окно
+root = p.display.set_mode((500 , 500))
+# 2х мерный список с помощью генераторных выражений
+cells = [[random.choice([0 , 1]) for j in range(root.get_width() // 20)] for i in range(root.get_height() // 20)]
 
 
+# Функция определения кол-ва соседей
+def near(pos: list , system=[[-1 , -1] , [-1 , 0] , [-1 , 1] , [0 , -1] , [0 , 1] , [1 , -1] , [1 , 0] , [1 , 1]]):
+    count = 0
+    for i in system:
+        if cells[(pos[0] + i[0]) % len(cells)][(pos[1] + i[1]) % len(cells[0])]:
+            count += 1
+    return count
 
 
+# Основной цикл
+while 1:
+    # Заполняем экран белым цветом
+    root.fill(WHITE)
 
+    # Рисуем сетку
+    for i in range(0 , root.get_height() // 20):
+        p.draw.line(root , BLACK , (0 , i * 20) , (root.get_width() , i * 20))
+    for j in range(0 , root.get_width() // 20):
+        p.draw.line(root , BLACK , (j * 20 , 0) , (j * 20 , root.get_height()))
+   # Нужно чтобы виндовс не думал что программа "не отвечает"
+    for i in p.event.get():
+        if i.type == QUIT:
+            quit()
+    # Проходимся по всем клеткам
 
-
-
-# Обработка прыжка
-    if not is_jump:
-        if keys[pygame.K_SPACE]:
-            is_jump = True
-    else:
-        if jump_count >= -10:
-            neg = 1
-            if jump_count < 0:
-                neg = -1
-            player_y -= (jump_count ** 2) * 0.5 * neg
-            jump_count -= 1
-        else:
-            is_jump = False
-            jump_count = 10
+    for i in range(0 , len(cells)):
+        for j in range(0 , len(cells[i])):
+            print(cells[i][j],i,j)
+            p.draw.rect(root , (255 * cells[i][j] % 256 , 0 , 0) , [i * 20 , j * 20 , 20 , 20])
+    # Обновляем экран
+    p.display.update()
+    cells2 = [[0 for j in range(len(cells[0]))] for i in range(len(cells))]
+    for i in range(len(cells)):
+        for j in range(len(cells[0])):
+            if cells[i][j]:
+                if near([i , j]) not in (2 , 3):
+                    cells2[i][j] = 0
+                    continue
+                cells2[i][j] = 1
+                continue
+            if near([i , j]) == 3:
+                cells2[i][j] = 1
+                continue
+            cells2[i][j] = 0
+    cells = cells2
